@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tf-cost-diff"
+version = "0.1.0"
+description = "Estimate the monthly cost delta of a Terraform plan and post it to a pull request."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Michael Tarassov", email = "michael@tarassov.me" }]
+keywords = ["terraform", "finops", "cost", "github-actions", "aws"]
+
+[project.urls]
+Homepage = "https://github.com/moveeeax/tf-cost-diff"
+
+[project.scripts]
+tf-cost-diff = "tf_cost_diff.__main__:main"
+
+[tool.setuptools]
+packages = ["tf_cost_diff"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
