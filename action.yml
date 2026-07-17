@@ -1,0 +1,33 @@
+name: "tf-cost-diff"
+description: "Comment an estimated monthly cost delta from a Terraform plan onto the pull request."
+branding:
+  icon: "dollar-sign"
+  color: "green"
+inputs:
+  plan:
+    description: "Path to `terraform show -json` output (a JSON file)."
+    required: true
+  threshold:
+    description: "Fail the check when the monthly delta exceeds this many dollars."
+    required: false
+  price-sheet:
+    description: "Optional path to a JSON price-sheet override."
+    required: false
+  github-token:
+    description: "Token used to post the PR comment."
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        python3 -m tf_cost_diff \
+          --plan "${{ inputs.plan }}" \
+          ${{ inputs.price-sheet && format('--price-sheet {0}', inputs.price-sheet) || '' }} \
+          ${{ inputs.threshold && format('--threshold {0}', inputs.threshold) || '' }} \
+          ${{ github.event.pull_request.number && format('--pr {0}', github.event.pull_request.number) || '' }}
+      working-directory: ${{ github.action_path }}
