@@ -2,7 +2,7 @@
 
 > See the $ impact of every Terraform change right in the PR, before you merge.
 
-[![ci](https://github.com/moveeeax/tf-cost-diff/actions/workflows/ci.yml/badge.svg)](https://github.com/moveeeax/tf-cost-diff/actions/workflows/ci.yml)
+[![ci](https://github.com/cybercapybara/tf-cost-diff/actions/workflows/ci.yml/badge.svg)](https://github.com/cybercapybara/tf-cost-diff/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -52,7 +52,7 @@ steps:
   - run: |
       terraform plan -out tf.plan
       terraform show -json tf.plan > plan.json
-  - uses: moveeeax/tf-cost-diff@v0
+  - uses: cybercapybara/tf-cost-diff@v0
     with:
       plan: plan.json
       threshold: "100"      # optional: fail if Δ > $100/mo

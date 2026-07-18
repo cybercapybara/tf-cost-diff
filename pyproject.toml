@@ -13,7 +13,7 @@ authors = [{ name = "Michael Tarassov", email = "michael@tarassov.me" }]
 keywords = ["terraform", "finops", "cost", "github-actions", "aws"]
 
 [project.urls]
-Homepage = "https://github.com/moveeeax/tf-cost-diff"
+Homepage = "https://github.com/cybercapybara/tf-cost-diff"
 
 [project.scripts]
 tf-cost-diff = "tf_cost_diff.__main__:main"
