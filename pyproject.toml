@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tf-cost-diff"
-version = "0.1.0"
+version = "0.2.0"
 description = "Estimate the monthly cost delta of a Terraform plan and post it to a pull request."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Michael Tarassov", email = "michael@tarassov.me" }]
 keywords = ["terraform", "finops", "cost", "github-actions", "aws"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pyyaml>=6"]
 
 [project.urls]
 Homepage = "https://github.com/moveeeax/tf-cost-diff"
