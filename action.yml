@@ -5,29 +5,70 @@ branding:
   color: "green"
 inputs:
   plan:
-    description: "Path to `terraform show -json` output (a JSON file)."
+    description: "Path to `terraform show -json` output (a JSON file), relative to the workspace."
     required: true
   threshold:
     description: "Fail the check when the monthly delta exceeds this many dollars."
     required: false
   price-sheet:
-    description: "Optional path to a JSON price-sheet override."
+    description: "Optional path to a JSON price-sheet override, relative to the workspace."
     required: false
   github-token:
     description: "Token used to post the PR comment."
     required: false
     default: ${{ github.token }}
+outputs:
+  total-delta:
+    description: "Estimated monthly cost delta in dollars, e.g. `-12.40`."
+    value: ${{ steps.cost.outputs.total-delta }}
+  created:
+    description: "Number of cost-relevant resources being created."
+    value: ${{ steps.cost.outputs.created }}
+  updated:
+    description: "Number of cost-relevant resources being changed or replaced."
+    value: ${{ steps.cost.outputs.updated }}
+  destroyed:
+    description: "Number of cost-relevant resources being destroyed."
+    value: ${{ steps.cost.outputs.destroyed }}
+  unpriced:
+    description: "Number of resources excluded from the total because their cost is unknown."
+    value: ${{ steps.cost.outputs.unpriced }}
+  complete:
+    description: "`true` when every cost-relevant resource could be priced."
+    value: ${{ steps.cost.outputs.complete }}
+  threshold-exceeded:
+    description: "`true` when the delta exceeded `threshold`."
+    value: ${{ steps.cost.outputs.threshold-exceeded }}
+  comment-url:
+    description: "URL of the sticky pull request comment, empty if none was posted."
+    value: ${{ steps.cost.outputs.comment-url }}
 runs:
   using: "composite"
   steps:
-    - shell: bash
+    - id: cost
+      shell: bash
+      # Inputs are passed through the environment rather than interpolated into
+      # the script, so a value containing shell metacharacters cannot execute.
+      # PYTHONPATH (not working-directory) makes the package importable, so that
+      # `plan` stays relative to the caller's workspace as documented.
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
+        PYTHONPATH: ${{ github.action_path }}
+        TFCD_PLAN: ${{ inputs.plan }}
+        TFCD_PRICE_SHEET: ${{ inputs.price-sheet }}
+        TFCD_THRESHOLD: ${{ inputs.threshold }}
+        TFCD_PR: ${{ github.event.pull_request.number }}
       run: |
-        python3 -m tf_cost_diff \
-          --plan "${{ inputs.plan }}" \
-          ${{ inputs.price-sheet && format('--price-sheet {0}', inputs.price-sheet) || '' }} \
-          ${{ inputs.threshold && format('--threshold {0}', inputs.threshold) || '' }} \
-          ${{ github.event.pull_request.number && format('--pr {0}', github.event.pull_request.number) || '' }}
-      working-directory: ${{ github.action_path }}
+        set -euo pipefail
+        args=(--plan "$TFCD_PLAN" --github-output "$GITHUB_OUTPUT")
+        if [ -n "${TFCD_PRICE_SHEET:-}" ]; then
+          args+=(--price-sheet "$TFCD_PRICE_SHEET")
+        fi
+        if [ -n "${TFCD_THRESHOLD:-}" ]; then
+          args+=(--threshold "$TFCD_THRESHOLD")
+        fi
+        if [ -n "${TFCD_PR:-}" ]; then
+          args+=(--pr "$TFCD_PR")
+        fi
+        python3 -m tf_cost_diff "${args[@]}"
